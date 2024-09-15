@@ -1,0 +1,31 @@
+{
+  "development": {
+    "username": "root",
+    "password": "12345678",
+    "database": "moneymanager",
+    "port": "3306",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "connectionLimit": 10
+  },
+  "test": {
+    "username": "root",
+    "password": "12345678",
+    "database": "moneymanager",
+    "port": "3306",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "host_redis": "127.0.0.1",
+    "port_redis": "6379",
+    "connectionLimit": 10
+  },
+  "production": {
+    "username": "root",
+    "password": "12345678",
+    "database": "moneymanager",
+    "port": "3306",
+    "host": "db",
+    "dialect": "mysql",
+    "connectionLimit": 10
+  }
+}
