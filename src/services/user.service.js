@@ -6,10 +6,8 @@ const { KeyTokenService, removeKeyById, findByRefreshTokenUsed, updateRefreshTok
 const { createTokenPair, verifyJWT } = require('../auth/authUtil');
 const { getInfoData } = require('../utils');
 const { BadRequestError, AuthFailureError } = require('../core/error.response');
-
-const { loginSuccess, setAuthorizationHeaders } = require('../auth/checkAuth');
-// const { sendMail } = require('./sendMailer/send.mail.service');
 const { findByEmail } = require('../models/repositoris/user.repo');
+const { sendMail } = require('./sendMailer/send.mail.service');
 
 /*
        1 - check email in dbs
@@ -86,7 +84,7 @@ const AccessService = async (user) => {
         }
         const tokens = await createTokenPair({ userId: newUser.id, email }, publicKey, privateKey);
         const subject = 'Verify Your Account'
-        // sendMail({ to: email, subject, text: email })
+        sendMail({ to: email, subject, text: email })
         return {
             code: '201',
             metadata: {
@@ -152,9 +150,27 @@ const handleRefreshToken = async (refreshToken) => {
         tokens
     }
 }
+
+const updateVerifyUser = async ({ email, verify }) => {
+console.log("aaaa",{ email, verify});
+try {
+
+    const data = {
+        verify: verify
+    }
+    return await User.update(data, {
+        where: { email: email },
+    });
+} catch (error) {
+    console.log("error :: ", error);
+    
+}
+  
+}
 module.exports = {
     AccessService,
     login,
     logout,
-    handleRefreshToken
+    handleRefreshToken,
+    updateVerifyUser
 }
