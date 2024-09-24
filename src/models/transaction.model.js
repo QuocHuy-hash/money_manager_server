@@ -14,11 +14,16 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'categoryId',
         as: 'category',
       });
+      Transaction.hasMany(models.User, {
+        foreignKey: 'userId',
+        as: 'user',
+      });
       Transaction.belongsTo(models.BankAccount, { foreignKey: 'bankAccount_id', as: 'bankAccount' });
     }
   }
   Transaction.init({
     account_id: DataTypes.INTEGER,
+    user_id: DataTypes.INTEGER,
     amount: DataTypes.DECIMAL,
     tid: DataTypes.STRING,
     title: DataTypes.STRING,

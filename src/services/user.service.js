@@ -6,11 +6,11 @@ const { KeyTokenService, removeKeyById, findByRefreshTokenUsed, updateRefreshTok
 const { createTokenPair, verifyJWT } = require('../auth/authUtil');
 const { getInfoData } = require('../utils');
 const { BadRequestError, AuthFailureError } = require('../core/error.response');
-const { findByEmail } = require('../models/repositoris/user.repo');
+const { findByEmail, updateverifyUsers } = require('../models/repositoris/user.repo');
 const { sendMail } = require('./sendMailer/send.mail.service');
 
 /*
-       1 - check email in dbs
+       1 - check username in dbs
        2 - match password
        3 - create AT vs RT and save
        4 - generate tokens
@@ -151,16 +151,12 @@ const handleRefreshToken = async (refreshToken) => {
     }
 }
 
-const updateVerifyUser = async ({ email, verify }) => {
-console.log("aaaa",{ email, verify});
+const verifyUser = async ({ email, verify }) => {
 try {
-
     const data = {
         verify: verify
     }
-    return await User.update(data, {
-        where: { email: email },
-    });
+    return await updateverifyUsers({ email, verify });
 } catch (error) {
     console.log("error :: ", error);
     
@@ -172,5 +168,5 @@ module.exports = {
     login,
     logout,
     handleRefreshToken,
-    updateVerifyUser
+    verifyUser
 }

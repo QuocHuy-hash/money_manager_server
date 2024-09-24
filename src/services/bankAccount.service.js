@@ -8,8 +8,7 @@ const addBankAccount = async (data , userId) => {
         throw new BadRequestError('Bank Account already exists');
     }
     return await BankAccount.create({
-        user_id: userId,
-        account_number, account_name, bank_name, balance, last_sync
+        user_id: userId, account_number, account_name, bank_name, balance, last_sync
     });
 
 }

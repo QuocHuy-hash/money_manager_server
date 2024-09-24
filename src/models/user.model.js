@@ -11,13 +11,12 @@ module.exports = (sequelize, DataTypes) => {
             User.hasMany(models.FinancialGoal, { foreignKey: 'user_id' });
             User.hasMany(models.Report, { foreignKey: 'user_id' });
             User.hasMany(models.FixedExpense, { foreignKey: 'user_id' });
-            User.hasMany(models.FixedExpense, { foreignKey: 'user_id' });
-            // User.hasMany(models.Notification, { foreignKey: 'user_id' });
+            User.hasMany(models.Transaction, { foreignKey: 'user_id' });
         }
     }
     User.init({
         user_name: {
-            type: DataTypes.STRING(50),
+            type: DataTypes.STRING(20),
             unique: true,
             allowNull: false
         },
@@ -27,13 +26,10 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
         full_name: {
-            type: DataTypes.STRING(100),
-            unique: true,
+            type: DataTypes.STRING(60),
         },
         email: {
-            type: DataTypes.STRING(100),
-            unique: true,
-            allowNull: false
+            type: DataTypes.STRING(60),
         },
         firstName: {
             type: DataTypes.STRING,
@@ -44,7 +40,6 @@ module.exports = (sequelize, DataTypes) => {
         api_key: DataTypes.TEXT,
         token_device: {
             type: DataTypes.TEXT,
-            unique: true
         },
         password: {
             type: DataTypes.STRING(255),
@@ -59,7 +54,8 @@ module.exports = (sequelize, DataTypes) => {
             validate: {
                 isIn: [['inactive', 'active']], // Giới hạn giá trị chỉ được là 'inactive' hoặc 'active'
             },
-        }
+        },
+       
     }, {
         sequelize,
         modelName: 'User',

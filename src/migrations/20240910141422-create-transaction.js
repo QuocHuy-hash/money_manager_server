@@ -12,6 +12,9 @@ module.exports = {
       account_id: {
         type: Sequelize.INTEGER
       },
+      user_id: {
+        type: Sequelize.INTEGER
+      },
       amount: {
         type: Sequelize.DECIMAL
       },

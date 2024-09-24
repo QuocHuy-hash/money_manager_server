@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { BadRequestError } = require('../../core/error.response');
-const { updateVerifyUser } = require('../user.service');
 // const { cli } = require('winston/lib/winston/config');
 const { User } = require('../../models');
 const redisClient = require('../../config/redis.config');

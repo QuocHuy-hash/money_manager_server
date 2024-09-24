@@ -10,10 +10,12 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       email: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       user_name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
       },
       full_name: {
         type: Sequelize.STRING
@@ -25,7 +27,8 @@ module.exports = {
         type: Sequelize.STRING,
       },
       phone_number: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: true,
       },
       api_key: {
         type: Sequelize.TEXT
@@ -51,6 +54,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    });
+    await queryInterface.addIndex('Users', ['full_name'], {
+      unique: true,
+      name: 'users_full_name_unique'
     });
   },
   async down(queryInterface, Sequelize) {

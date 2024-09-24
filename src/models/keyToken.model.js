@@ -12,9 +12,11 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'User', // Tham chiếu đến model 'Shops'
-                key: 'id', // Tham chiếu đến trường 'id' của model 'Shops'
+                model: 'Users', 
+                key: 'id', 
             },
+            onUpdate: 'CASCADE',
+            onDelete: 'CASCADE',
         },
         publicKey: {
             type: DataTypes.JSON,
