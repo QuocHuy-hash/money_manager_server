@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { BadRequestError } = require('../core/error.response');
 const { Transaction, Category } = require('../models');
 
@@ -35,14 +36,33 @@ class TransactionService {
             throw new BadRequestError('Error getting transaction');
         }
     }
-    static async getTransactions(userId) {
+    static async getTransactions(userId, startDate, endDate) {
+        if (!startDate || !endDate) {
+            throw new BadRequestError('Start date and end date are required');
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (end < start) {
+            throw new BadRequestError('End date cannot be earlier than start date');
+        }
+
         try {
+            const whereClause = {
+                user_id: userId,
+                transaction_date: {
+                    [Op.gte]: start,
+                    [Op.lte]: end
+                }
+            };
+
             return await Transaction.findAll({
-                where: { user_id: userId },
+                where: whereClause,
                 include: [{
-                    model: Category, 
-                    as: 'category',  
-                    attributes: ['name'] 
+                    model: Category,
+                    as: 'category',
+                    attributes: ['name']
                 }]
             });
         } catch (error) {
@@ -50,11 +70,30 @@ class TransactionService {
             throw new BadRequestError('Error getting transactions');
         }
     }
-    static async getTransactionSummary(userId) {
+    static async getTransactionSummary(userId, startDate, endDate) {
+        if (!startDate || !endDate) {
+            throw new BadRequestError('Start date and end date are required');
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (end < start) {
+            throw new BadRequestError('End date cannot be earlier than start date');
+        }
+
         try {
+            const whereClause = {
+                user_id: userId,
+                transaction_date: {
+                    [Op.gte]: start,
+                    [Op.lte]: end
+                }
+            };
+
             // Lấy tất cả transactions, bao gồm category liên quan
             const transactions = await Transaction.findAll({
-                where: { user_id: userId },
+                where: whereClause,
                 include: [{
                     model: Category,
                     as: 'category',

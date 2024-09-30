@@ -20,7 +20,7 @@ class TransactionController {
 
     }
     updateTransaction = async (req, res, next) => {
-
+        this.setUserId(req);
         new CreatedResponse({
             message: 'update Transaction successfully',
             metadata: await TransactionService.updateTransaction(req.body, this.userId),
@@ -29,7 +29,7 @@ class TransactionController {
     }
     getDetail = async (req, res, next) => {
         const id = req.query.id;
-
+        this.setUserId(req);
         new SuccessResponse({
             message: 'getDetail Transaction successfully',
             metadata: await TransactionService.getTransactionById(id, this.userId),
@@ -37,16 +37,18 @@ class TransactionController {
     }
     getList = async (req, res, next) => {
         this.setUserId(req);
+         const { startDate, endDate } = req.query;
         new SuccessResponse({
             message: 'getList Transaction successfully',
-            metadata: await TransactionService.getTransactions(this.userId),
+            metadata: await TransactionService.getTransactions(this.userId, startDate, endDate),
         }).send(res)
     }
     getListSummary = async (req, res, next) => {
         this.setUserId(req);
+        const { startDate, endDate } = req.query;
         new SuccessResponse({
             message: 'getListSummary successfully',
-            metadata: await TransactionService.getTransactionSummary(this.userId),
+            metadata: await TransactionService.getTransactionSummary(this.userId, startDate, endDate ),
         }).send(res)
     }
     getCategorys = async (req, res, next) => {
