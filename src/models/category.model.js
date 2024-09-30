@@ -16,12 +16,16 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
+
   Category.init({
     name: DataTypes.STRING,
     type: DataTypes.STRING,
   }, {
     sequelize,
+    timestamp: true,
     modelName: 'Category',
   });
+
+  // Gọi hàm để thêm danh mục
   return Category;
 };

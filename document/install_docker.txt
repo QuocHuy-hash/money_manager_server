@@ -1,0 +1,95 @@
+Tạo file bashscript vaf chmod cacs permistion cho file
+
+# touch docker-install.sh && chmod +x docker-install.sh && vi docker-install.sh
+
+Nội dung trong file như sau:
+
+#!/bin/bash
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update -y
+sudo apt install docker-ce -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker -v
+docker-compose -v
+
+Và khởi chạy file bashscript để install Docker:
+# sh docker-install.sh
+
+
+Cài đặt cloudbeaver bằng docker
+Hầu hết các databases khi cài đặt sẽ chỉ có thể tương tác dưới dạng command line (giao diện dòng lệnh) nên sẽ tiến hành triển khai một công cụ giúp kết nối và quản lý các databases bằng giao diện trực quan chính là cloudbeaver.
+
+Tạo file docker-compose:
+# vi docker-compose-cloudbeaver.yml
+
+Nội dung trong file như sau:
+
+'''
+version: '3.8'
+services:
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: cloudbeaver
+    ports:
+      - "80:8978"
+    volumes:
+      - /data/cloudbeaver/:/opt/cloudbeaver/workspace
+    restart: always
+'''
+
+Khởi chạy câu lệnh tạo container:
+# docker-compose -f docker-compose-cloudbeaver.yml up -d
+
+Sau khi tạo thành công Tiến hành truy cập trên trình duyệt với địa chỉ IP của server với Port mặc định là 80
+
+###Cài đặt mongodb bằng docker###
+
+Tạo file docker-compose:
+# vi docker-compose-mongodb.yml
+
+Nội dung trong file như sau:
+
+'''
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - /data/mongo:/data/db
+    restart: always
+'''
+
+Khởi chạy câu lệnh tạo container:
+# docker-compose -f docker-compose-mongodb.yml up -d
+
+
+###Cài đặt redis bằng docker###
+
+Tạo file docker-compose:
+# vi docker-compose-redis.yml
+
+Nội dung trong file như sau:
+
+'''
+version: '3.8'
+services:
+  redis:
+    image: redis:6.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /data/redis/:/data
+    restart: always
+'''
+
+Khởi chạy câu lệnh tạo container:
+# docker-compose -f docker-compose-redis.yml up -d

@@ -15,7 +15,6 @@ module.exports = {
       user_name: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       full_name: {
         type: Sequelize.STRING
@@ -28,7 +27,6 @@ module.exports = {
       },
       phone_number: {
         type: Sequelize.STRING,
-        unique: true,
       },
       api_key: {
         type: Sequelize.TEXT

@@ -1,10 +1,11 @@
 const { BadRequestError } = require('../core/error.response');
-const { Transaction } = require('../models');
+const { Transaction, Category } = require('../models');
 
 class TransactionService {
-    static async addTransaction(data, userId) {
+    static async addTransaction(body, userId) {
+        const user_id = userId;
         try {
-            const transactionData = this._prepareTransactionData(data, userId);
+            const transactionData = this._prepareTransactionData(body.data, user_id);
             return await Transaction.create(transactionData);
         } catch (error) {
             console.error('Error adding transaction:', error);
@@ -36,10 +37,82 @@ class TransactionService {
     }
     static async getTransactions(userId) {
         try {
-            return await Transaction.findAll({ where: { user_id: userId } });
+            return await Transaction.findAll({
+                where: { user_id: userId },
+                include: [{
+                    model: Category, 
+                    as: 'category',  
+                    attributes: ['name'] 
+                }]
+            });
         } catch (error) {
             console.error('Error getting transactions:', error);
             throw new BadRequestError('Error getting transactions');
+        }
+    }
+    static async getTransactionSummary(userId) {
+        try {
+            // Lấy tất cả transactions, bao gồm category liên quan
+            const transactions = await Transaction.findAll({
+                where: { user_id: userId },
+                include: [{
+                    model: Category,
+                    as: 'category',
+                    attributes: ['id', 'name'] // Chỉ lấy ID và tên của category
+                }]
+            });
+
+            // Nhóm theo category và tính tổng số tiền
+            const categoryTotals = {};
+            let totalAmount = 0;
+            let salaryTotal = 0; // Tổng tiền của lương 
+            let bonusTotal = 0; // Tổng tiền của thưởng 
+
+            transactions.forEach(transaction => {
+                const categoryId = transaction.category.id;
+                const categoryName = transaction.category.name;
+                const amount = parseFloat(transaction.amount);
+
+                // Tính tổng cho từng category
+                if (!categoryTotals[categoryId]) {
+                    categoryTotals[categoryId] = {
+                        categoryName,
+                        totalAmount: 0
+                    };
+                }
+                categoryTotals[categoryId].totalAmount += amount;
+
+                // Tính tổng số tiền lương và thưởng 
+                if (categoryId === 8) {
+                    salaryTotal += amount;
+                }
+                if (categoryId === 11) {
+                    bonusTotal += amount;
+                }
+
+                // Tổng tất cả các giao dịch
+                totalAmount += amount;
+            });
+            // Tính phần trăm cho từng category
+            Object.keys(categoryTotals).forEach(categoryId => {
+                const category = categoryTotals[categoryId];
+                category.percentage = ((category.totalAmount / totalAmount) * 100).toFixed(2);
+            });
+            // Tính phần trăm tăng hoặc giảm so với lương (category 8) và thưởng (category 11)
+            const salaryPercentage = (salaryTotal / totalAmount) * 100;
+            const bonusPercentage = (bonusTotal / totalAmount) * 100;
+
+            return {
+                totalAmount,
+                categoryTotals,
+                salaryTotal,
+                bonusTotal,
+                salaryPercentage: salaryPercentage.toFixed(2), // Làm tròn 2 chữ số sau dấu thập phân
+                bonusPercentage: bonusPercentage.toFixed(2)
+            };
+        } catch (error) {
+            console.error('Error getting transaction summary:', error);
+            throw new BadRequestError('Error getting transaction summary');
         }
     }
     static _prepareTransactionData(data, userId = null) {

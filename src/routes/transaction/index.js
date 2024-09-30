@@ -10,8 +10,9 @@ router.use(authentication) //require login
 router.post('/transaction/add', asyncHandle(TransactionController.addTransaction));
 router.post('/transaction/update', asyncHandle(TransactionController.updateTransaction));
 router.get('/transaction/get-detail', asyncHandle(TransactionController.getDetail));
-router.get('/transaction/get-list', asyncHandle(TransactionController.getList)); 
-router.get('/transaction/get-categorys', asyncHandle(TransactionController.getCategorys)); 
+router.get('/transaction/get-list', asyncHandle(TransactionController.getList));
+router.get('/transaction/get-categorys', asyncHandle(TransactionController.getCategorys));
+router.get('/transaction/get-list-summary', asyncHandle(TransactionController.getListSummary)); 
 
 
-module.exports = router;
+module.exports = router; 

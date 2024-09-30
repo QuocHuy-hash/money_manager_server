@@ -17,12 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     User.init({
         user_name: {
             type: DataTypes.STRING(20),
-            unique: true,
             allowNull: false
         },
         phone_number: {
             type: DataTypes.STRING(10),
-            unique: true,
             allowNull: false
         },
         full_name: {
@@ -60,7 +58,17 @@ module.exports = (sequelize, DataTypes) => {
         sequelize,
         modelName: 'User',
         tableName: 'Users',
-        timestamps: true
+        timestamps: true,
+        indexes: [
+            {
+                unique: true,
+                fields: ['user_name']
+            },
+            {
+                unique: true,
+                fields: ['phone_number']
+            }
+        ]
     });
     return User;
 };
