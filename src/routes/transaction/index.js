@@ -12,7 +12,8 @@ router.post('/transaction/update', asyncHandle(TransactionController.updateTrans
 router.get('/transaction/get-detail', asyncHandle(TransactionController.getDetail));
 router.get('/transaction/get-list', asyncHandle(TransactionController.getList));
 router.get('/transaction/get-categorys', asyncHandle(TransactionController.getCategorys));
-router.get('/transaction/get-list-summary', asyncHandle(TransactionController.getListSummary)); 
+router.get('/transaction/get-list-summary', asyncHandle(TransactionController.getListSummary));
+router.get('/transaction/get-by-category', asyncHandle(TransactionController.getTransactionsByCategory)); 
 
 
 module.exports = router; 

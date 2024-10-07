@@ -43,12 +43,20 @@ class TransactionController {
             metadata: await TransactionService.getTransactions(this.userId, startDate, endDate),
         }).send(res)
     }
+    getTransactionsByCategory = async (req, res, next) => {
+        this.setUserId(req);
+        const { categoryId, startDate, endDate } = req.query;
+        new SuccessResponse({
+            message: 'getTransactionsByCategory successfully',
+            metadata: await TransactionService.getTransactionsByCategory(this.userId, categoryId, startDate, endDate ),
+        }).send(res)
+    }
     getListSummary = async (req, res, next) => {
         this.setUserId(req);
         const { startDate, endDate } = req.query;
         new SuccessResponse({
             message: 'getListSummary successfully',
-            metadata: await TransactionService.getTransactionSummary(this.userId, startDate, endDate ),
+            metadata: await TransactionService.getTransactionSummary(this.userId, startDate, endDate),
         }).send(res)
     }
     getCategorys = async (req, res, next) => {

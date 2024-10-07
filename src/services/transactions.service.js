@@ -98,7 +98,9 @@ class TransactionService {
                     model: Category,
                     as: 'category',
                     attributes: ['id', 'name'] // Chỉ lấy ID và tên của category
-                }]
+                }],
+                order: [['transaction_date', 'DESC']] // Sắp xếp theo ngày giao dịch, mới nhất trước
+
             });
 
             // Nhóm theo category và tính tổng số tiền
@@ -106,18 +108,33 @@ class TransactionService {
             let totalAmount = 0;
             let salaryTotal = 0; // Tổng tiền của lương 
             let bonusTotal = 0; // Tổng tiền của thưởng 
-
+            let category_id = 0;
             transactions.forEach(transaction => {
                 const categoryId = transaction.category.id;
+                category_id = categoryId;
                 const categoryName = transaction.category.name;
                 const amount = parseFloat(transaction.amount);
-
+                const transactionDate = new Date(transaction.transaction_date);
                 // Tính tổng cho từng category
                 if (!categoryTotals[categoryId]) {
                     categoryTotals[categoryId] = {
                         categoryName,
-                        totalAmount: 0
+                        categoryId,
+                        totalAmount: 0,
+                        representativeDate: transactionDate, // Khởi tạo với ngày giao dịch đầu tiên (gần đây nhất)
+                        largestTransaction: {
+                            amount: amount,
+                            date: transactionDate
+                        }
                     };
+                } else {
+                    if (amount > categoryTotals[categoryId].largestTransaction.amount) {
+                        categoryTotals[categoryId].largestTransaction = {
+                           
+                            amount: amount,
+                            date: transactionDate
+                        };
+                    }
                 }
                 categoryTotals[categoryId].totalAmount += amount;
 
@@ -131,11 +148,14 @@ class TransactionService {
 
                 // Tổng tất cả các giao dịch
                 totalAmount += amount;
+               
             });
             // Tính phần trăm cho từng category
             Object.keys(categoryTotals).forEach(categoryId => {
                 const category = categoryTotals[categoryId];
                 category.percentage = ((category.totalAmount / totalAmount) * 100).toFixed(2);
+                category.representativeDate = category.largestTransaction.date;
+                delete category.largestTransaction; // Xóa thông tin tạm thời
             });
             // Tính phần trăm tăng hoặc giảm so với lương (category 8) và thưởng (category 11)
             const salaryPercentage = (salaryTotal / totalAmount) * 100;
@@ -144,6 +164,7 @@ class TransactionService {
             return {
                 totalAmount,
                 categoryTotals,
+                
                 salaryTotal,
                 bonusTotal,
                 salaryPercentage: salaryPercentage.toFixed(2), // Làm tròn 2 chữ số sau dấu thập phân
@@ -152,6 +173,41 @@ class TransactionService {
         } catch (error) {
             console.error('Error getting transaction summary:', error);
             throw new BadRequestError('Error getting transaction summary');
+        }
+    }
+    static async getTransactionsByCategory(userId, categoryId, startDate = null, endDate = null) {
+        const whereClause = {
+            user_id: userId,
+            category_id: categoryId
+        };
+
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (end < start) {
+                throw new BadRequestError('End date cannot be earlier than start date');
+            }
+
+            whereClause.transaction_date = {
+                [Op.gte]: start,
+                [Op.lte]: end,
+            };
+        }
+
+        try {
+            return await Transaction.findAll({
+                where: whereClause,
+                include: [{
+                    model: Category,
+                    as: 'category',
+                    attributes: ['name'] // Hiển thị tên category
+                }],
+                order: [['transaction_date', 'DESC']] // Sắp xếp theo ngày giao dịch từ mới nhất đến cũ nhất
+            });
+        } catch (error) {
+            console.error('Error getting transactions by category:', error);
+            throw new BadRequestError('Error getting transactions by category');
         }
     }
     static _prepareTransactionData(data, userId = null) {

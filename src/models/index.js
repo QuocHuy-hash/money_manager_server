@@ -13,7 +13,7 @@ const sequelize = new Sequelize(
   config.development.password, {
   host: config.development.host,
   port: config.development.port,
-  dialect: 'mysql',
+    dialect: 'postgres',
   logging: false,
   pool: {
     max: 10, // Số kết nối tối đa trong pool

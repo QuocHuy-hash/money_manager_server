@@ -3,21 +3,23 @@ const { Op } = require('sequelize');
 const { BadRequestError, NotFoundError } = require('../core/error.response');
 const { FixedExpense, Category } = require('../models');
 const { parse, isValid } = require('date-fns');
-
+const { enGB } = require('date-fns/locale');
 class FixedExpensesService {
 
     static async addFixedExpenses(body, userId) {
         const user_id = userId;
         try {
-            console.log("body ", body);
             const expenseData = this._prepareFixedExpensesData(body, user_id);
-console.log("expenseData ", expenseData);
+            console.log("expenseData ", expenseData);
             return await FixedExpense.create(expenseData);
         } catch (error) {
+            console.log("error ", error);
             throw new BadRequestError('Error adding FixedExpenses', error);
         }
     }
-    static async updateFixedExpenses(id, data, userId) {
+    static async updateFixedExpenses(data, userId) {
+        const id = data.data.id;
+
         try {
             const expense = await FixedExpense.findOne({ where: { id, user_id: userId } });
             if (!expense) {
@@ -100,28 +102,33 @@ console.log("expenseData ", expenseData);
             await expense.destroy();
             return expense;
         } catch (error) {
-            throw new BadRequestError(`Error deleting FixedExpenses ${error}`, );
+            throw new BadRequestError(`Error deleting FixedExpenses ${error}`,);
         }
     }
     static _prepareFixedExpensesData(data, userId = null) {
-        const startDate = parse(data.start_date, 'dd/MM/yyyy HH:mm:ss', new Date());
-        const endDate = parse(data.end_date, 'dd/MM/yyyy HH:mm:ss', new Date());
 
-        // Kiểm tra xem ngày có hợp lệ không
-        if (!isValid(startDate) || !isValid(endDate)) {
-            throw new BadRequestError('Invalid date format');
+        const item = data.data
+        if (typeof item.start_date === 'string' && typeof item.end_date === 'string') {
+            const startDate = parse(item.start_date, 'yyyy-MM-dd HH:mm:ss', new Date());
+            const endDate = parse(item.end_date, 'yyyy-MM-dd HH:mm:ss', new Date());
+
+            if (!isValid(startDate) || !isValid(endDate)) {
+                throw new BadRequestError('Invalid date format');
+            }
+
+            return {
+                name: item.name || '',
+                amount: item.amount || 0,
+                frequency: item.frequency || null,
+                start_date: startDate,
+                end_date: endDate,
+                category_id: item.category_id,
+                description: item.description,
+                ...(userId && { user_id: userId })
+            };
+        } else {
+            throw new BadRequestError('Start date or end date is missing or in the incorrect format');
         }
-
-        return {
-            name: data.name || '',
-            amount: data.amount || 0,
-            frequency: data.frequency || null,
-            start_date: startDate,
-            end_date: endDate,
-            category_id: data.category_id,
-            description: data.description,
-            ...(userId && { user_id: userId })
-        };
     }
 }
 module.exports = FixedExpensesService;

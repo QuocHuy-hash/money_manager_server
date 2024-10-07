@@ -1,12 +1,12 @@
 {
   "development": {
-    "username": "root",
+    "username": "postgres",
     "password": "12345678",
     "database": "moneymanager",
-    "port": "3306",
-    "host": "127.0.0.1",
-    "dialect": "mysql",
-    "connectionLimit": 10
+    "port": "5433",
+    "host": "localhost",
+    "dialect": "postgres",
+    "connectionLimit": 100
   },
   "test": {
     "username": "root",
