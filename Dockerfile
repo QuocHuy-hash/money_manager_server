@@ -1,8 +1,8 @@
-# Use the official Node.js image as the base image
-FROM node:18 as builder
-WORKDIR /usr/src/app
+FROM node:20 AS builder
+WORKDIR /src
 COPY package*.json ./
-RUN npm install
+# RUN npm install && npm install pm2 -g
+RUN npm install 
 COPY . .
 EXPOSE 3056
-CMD ["node", "src/app.js"]
+CMD [ "npm", "start" , "npm start"]
