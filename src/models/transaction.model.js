@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'userId',
         as: 'user',
       });
-      Transaction.belongsTo(models.BankAccount, { foreignKey: 'bankAccount_id', as: 'bankAccount' });
     }
   }
   Transaction.init({

@@ -3,8 +3,8 @@
     "username": "postgres",
     "password": "12345678",
     "database": "moneymanager",
-    "port": "5432",
-    "host": "database",
+    "port": "5433",
+    "host": "localhost",
     "dialect": "postgres",
     "connectionLimit": 100
   },

@@ -48,8 +48,10 @@ const login = async ({ userName, password, refreshToken = null }) => {
     //Send Mail
 
     return {
-        user: { id: foundUser.id, firstName: foundUser.firstName, lastName: foundUser.lastName, email: foundUser.email ,
- user_name: foundUser.user_name, phone_number: foundUser.phone_number},
+        user: {
+            id: foundUser.id, firstName: foundUser.firstName, lastName: foundUser.lastName, email: foundUser.email,
+            user_name: foundUser.user_name, phone_number: foundUser.phone_number
+        },
         tokens
     }
 }
@@ -66,7 +68,7 @@ const AccessService = async (user) => {
         throw new BadRequestError('Error : User already register');
     }
     const newUser = await User.create({
-        email, password: passwordHash, firstName, lastName, phone_number: phoneNumber, user_name : userName
+        email, password: passwordHash, firstName, lastName, phone_number: phoneNumber, user_name: userName
     });
     if (newUser) {
 
@@ -138,13 +140,7 @@ const handleRefreshToken = async (refreshToken) => {
 
     //create 1 cap token moi
     const tokens = await createTokenPair({ userId, email }, holderToken.publicKey, holderToken.privateKey);
-
-    console.log('check holderToken', holderToken)
-
     await updateRefreshToken(tokens.refreshToken, refreshToken);
-
-
-
     return {
         user: { userId, email },
         tokens
@@ -152,21 +148,26 @@ const handleRefreshToken = async (refreshToken) => {
 }
 
 const verifyUser = async ({ email, verify }) => {
-try {
-    const data = {
-        verify: verify
+    try {
+        return await updateverifyUsers({ email, verify });
+    } catch (error) {
+        console.log("error :: ", error);
     }
-    return await updateverifyUsers({ email, verify });
-} catch (error) {
-    console.log("error :: ", error);
-    
 }
-  
+
+const getUser = async (id) => { 
+    const user = await User.findOne({ where: { id } });
+
+    if (!user) {
+        throw new BadRequestError('User not found');
+    }
+    return user;
 }
 module.exports = {
     AccessService,
     login,
     logout,
     handleRefreshToken,
-    verifyUser
+    verifyUser,
+    getUser
 }

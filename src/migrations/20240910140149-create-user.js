@@ -53,10 +53,10 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
-    await queryInterface.addIndex('Users', ['full_name'], {
-      unique: true,
-      name: 'users_full_name_unique'
-    });
+    // await queryInterface.addIndex('Users', ['full_name'], {
+    //   unique: true,
+    //   name: 'users_full_name_unique'
+    // });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Users');
