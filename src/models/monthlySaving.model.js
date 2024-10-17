@@ -13,9 +13,9 @@ module.exports = (sequelize, DataTypes) => {
 
     MonthlySaving.init({
         financial_goal_id: DataTypes.INTEGER,
-        month: DataTypes.STRING, // Ví dụ: "2024-10"
-        amount_saved: DataTypes.DECIMAL, // Số tiền tiết kiệm được trong tháng
-        percentage_of_goal: DataTypes.FLOAT // Phần trăm đạt được so với mục tiêu còn lại
+        month: DataTypes.STRING, 
+        amount_saved: DataTypes.DECIMAL, 
+        percentage_of_goal: DataTypes.FLOAT 
     }, {
         sequelize,
         modelName: 'MonthlySaving',

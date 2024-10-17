@@ -17,8 +17,6 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
         const refreshToken = await JWT.sign(payload, privateKey, {
             expiresIn: '7 days',
         });
-        console.log("accessToken ", accessToken);
-        console.log("refreshToken ", refreshToken);
         JWT.verify(accessToken, publicKey, (err, decode) => {
             if (err) {
                 console.log("looix", err);

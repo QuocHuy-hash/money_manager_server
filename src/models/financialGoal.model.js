@@ -1,5 +1,5 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, BIGINT } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class FinancialGoal extends Model {
@@ -20,19 +20,18 @@ module.exports = (sequelize, DataTypes) => {
       if (typeof this.deadline === 'string') {
         this.deadline = new Date(this.deadline);
       }
-
       if (!this.deadline || !(this.deadline instanceof Date) || isNaN(this.deadline.getTime())) {
         throw new Error('Invalid deadline date.');
       }
-
       const today = new Date();
-      const monthsLeft = Math.max(1, (this.deadline.getFullYear() - today.getFullYear()) * 12 + (this.deadline.getMonth() - today.getMonth()));
-      const remainingAmount = this.target_amount - this.current_amount;
-      // Cộng dồn số tiền thiếu từ các tháng trước (nếu có)
-      const totalAmountToSave = remainingAmount + (this.missed_saving_amount || 0);
 
-      // Tính toán số tiền tiết kiệm cho mỗi tháng, chia đều cho các tháng còn lại
-      this.monthly_saving_amount = totalAmountToSave > 0 ? (totalAmountToSave / monthsLeft) : 0;
+      const monthsLeft = Math.max(1, (this.deadline.getFullYear() - today.getFullYear()) * 12 + (this.deadline.getMonth() - today.getMonth()));
+
+      const targetAmount = parseFloat(this.target_amount || '0');
+      const currentAmount = parseFloat(this.current_amount || '0');
+
+      const remainingAmount = targetAmount - currentAmount;
+      this.monthly_saving_amount = remainingAmount > 0 ? remainingAmount / monthsLeft : 0;
     }
 
     /**

@@ -66,24 +66,23 @@ class FinancialGoalService {
 
             // Lưu lại lịch sử tiết kiệm của tháng hiện tại
             await logMonthlySaving(goal, data.amount_saved);
+          
 
-            // Cập nhật số tiền hiện tại của mục tiêu tài chính
-            goal.current_amount += data.amount_saved;
-
-            // Tính toán lại số tiền tiết kiệm mỗi tháng sau khi cập nhật
+            goal.current_amount = parseFloat(goal.current_amount) + data.amount_saved;
             goal.calculateMonthlySaving();
-            await goal.save();
-
-            return goal;
+            return await goal.save();
         } catch (error) {
             throw new Error('Error updating financial goal: ' + error.message);
         }
     }
 
     // Xóa một mục tiêu tài chính
-    async deleteFinancialGoal(id) {
+    async deleteFinancialGoal(id, userId) {
         try {
-            const goal = await FinancialGoal.findByPk(id);
+            const goal = await FinancialGoal.findOne({
+                where: { id, user_id: userId },
+                include: [{ model: User, as: 'user' }]
+            });
             if (!goal) {
                 throw new Error('Financial goal not found');
             }
@@ -93,81 +92,6 @@ class FinancialGoalService {
             throw new Error('Error deleting financial goal: ' + error.message);
         }
     }
-
-    // Tính phần trăm hoàn thành của một mục tiêu tài chính
-    async calculateCompletionPercentage(goalId) {
-        try {
-            const goal = await FinancialGoal.findByPk(goalId);
-            if (!goal) {
-                throw new Error('Financial goal not found');
-            }
-            const percentage = (goal.current_amount / goal.target_amount) * 100;
-            return Math.min(percentage, 100); // Giới hạn ở 100%
-        } catch (error) {
-            throw new Error('Error calculating completion percentage: ' + error.message);
-        }
-    }
-
-    // Kiểm tra và cập nhật trạng thái của một mục tiêu tài chính
-    async checkAndUpdateGoalStatus(goalId) {
-        try {
-            const goal = await FinancialGoal.findByPk(goalId);
-            if (!goal) {
-                throw new Error('Financial goal not found');
-            }
-            if (goal.current_amount >= goal.target_amount) {
-                // Cập nhật trạng thái nếu đã hoàn thành
-                await goal.update({ status: 'completed' });
-                return { message: 'Goal has been marked as completed' };
-            }
-            return { message: 'Goal is not yet completed' };
-        } catch (error) {
-            throw new Error('Error updating goal status: ' + error.message);
-        }
-    }
-
-    // Lấy danh sách mục tiêu tài chính gần hết hạn
-    async getGoalsNearDeadline(userId, days = 7) {
-        try {
-            const today = new Date();
-            const deadlineDate = new Date(today);
-            deadlineDate.setDate(today.getDate() + days);
-
-            const goals = await FinancialGoal.findAll({
-                where: {
-                    user_id: userId,
-                    deadline: {
-                        [Op.lte]: deadlineDate
-                    }
-                }
-            });
-            return goals;
-        } catch (error) {
-            throw new Error('Error fetching goals near deadline: ' + error.message);
-        }
-    }
-
-    // Cập nhật số tiền tiết kiệm hàng tháng, xử lý số tiền chưa tiết kiệm được
-    async updateMonthlySavingAmount(goalId) {
-        try {
-            const goal = await FinancialGoal.findByPk(goalId);
-            if (!goal) {
-                throw new Error('Financial goal not found');
-            }
-
-            // Tính toán lại số tiền cần tiết kiệm hàng tháng và lưu lại
-            goal.calculateMonthlySaving();
-            await goal.save();
-
-            return { message: 'Monthly saving amount updated successfully', monthly_saving_amount: goal.monthly_saving_amount };
-        } catch (error) {
-            throw new Error('Error updating monthly saving amount: ' + error.message);
-        }
-    }
-
-    // Ghi lại lịch sử tiết kiệm hàng tháng
-   
-
     // Lấy danh sách lịch sử tiết kiệm của một mục tiêu tài chính
     async getMonthlySavings(goalId) {
         try {
@@ -180,6 +104,81 @@ class FinancialGoalService {
             throw new Error('Error fetching monthly savings: ' + error.message);
         }
     }
+    // Tính phần trăm hoàn thành của một mục tiêu tài chính
+    // async calculateCompletionPercentage(goalId) {
+    //     try {
+    //         const goal = await FinancialGoal.findByPk(goalId);
+    //         if (!goal) {
+    //             throw new Error('Financial goal not found');
+    //         }
+    //         const percentage = (goal.current_amount / goal.target_amount) * 100;
+    //         return Math.min(percentage, 100); // Giới hạn ở 100%
+    //     } catch (error) {
+    //         throw new Error('Error calculating completion percentage: ' + error.message);
+    //     }
+    // }
+
+    // // Kiểm tra và cập nhật trạng thái của một mục tiêu tài chính
+    // async checkAndUpdateGoalStatus(goalId) {
+    //     try {
+    //         const goal = await FinancialGoal.findByPk(goalId);
+    //         if (!goal) {
+    //             throw new Error('Financial goal not found');
+    //         }
+    //         if (goal.current_amount >= goal.target_amount) {
+    //             // Cập nhật trạng thái nếu đã hoàn thành
+    //             await goal.update({ status: 'completed' });
+    //             return { message: 'Goal has been marked as completed' };
+    //         }
+    //         return { message: 'Goal is not yet completed' };
+    //     } catch (error) {
+    //         throw new Error('Error updating goal status: ' + error.message);
+    //     }
+    // }
+
+    // // Lấy danh sách mục tiêu tài chính gần hết hạn
+    // async getGoalsNearDeadline(userId, days = 7) {
+    //     try {
+    //         const today = new Date();
+    //         const deadlineDate = new Date(today);
+    //         deadlineDate.setDate(today.getDate() + days);
+
+    //         const goals = await FinancialGoal.findAll({
+    //             where: {
+    //                 user_id: userId,
+    //                 deadline: {
+    //                     [Op.lte]: deadlineDate
+    //                 }
+    //             }
+    //         });
+    //         return goals;
+    //     } catch (error) {
+    //         throw new Error('Error fetching goals near deadline: ' + error.message);
+    //     }
+    // }
+
+    // Cập nhật số tiền tiết kiệm hàng tháng, xử lý số tiền chưa tiết kiệm được
+    // async updateMonthlySavingAmount(goalId) {
+    //     try {
+    //         const goal = await FinancialGoal.findByPk(goalId);
+    //         if (!goal) {
+    //             throw new Error('Financial goal not found');
+    //         }
+
+    //         // Tính toán lại số tiền cần tiết kiệm hàng tháng và lưu lại
+    //         goal.calculateMonthlySaving();
+    //         await goal.save();
+
+    //         return { message: 'Monthly saving amount updated successfully', monthly_saving_amount: goal.monthly_saving_amount };
+    //     } catch (error) {
+    //         throw new Error('Error updating monthly saving amount: ' + error.message);
+    //     }
+    // }
+
+    // Ghi lại lịch sử tiết kiệm hàng tháng
+   
+
+    
 
 }
 const logMonthlySaving = async (goal, amountSaved) => {
