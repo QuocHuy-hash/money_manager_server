@@ -1,7 +1,7 @@
 'use strict'
 
 const { CreatedResponse, SuccessResponse } = require("../core/success.response");
-const { createFinancialGoal, getUserFinancialGoals, getFinancialGoalById, updateFinancialGoal, getMonthlySavings } = require("../services/goal.service");
+const { createFinancialGoal, getUserFinancialGoals, getFinancialGoalById, updateFinancialGoal, getMonthlySavings, deleteFinancialGoal } = require("../services/goal.service");
 
 const HEADER = {
     CLIENT_ID: 'x-client-id',
@@ -17,6 +17,16 @@ class GoalsController {
         new CreatedResponse({
             message: 'addGoal Success',
             metadata: await createFinancialGoal(req.body, this.userId),
+        }).send(res)
+
+    }
+    delGoal = async (req, res, next) => {
+        this.setUserId(req);
+       const id  = req.query.id;
+console.log('id', id)
+        new CreatedResponse({
+            message: 'delete Success',
+            metadata: await deleteFinancialGoal(id, this.userId),
         }).send(res)
 
     }

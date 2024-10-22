@@ -26,7 +26,7 @@ class FinancialGoalService {
     async getUserFinancialGoals(userId) {
         try {
             const goals = await FinancialGoal.findAll({
-                where: { user_id: userId },
+                where: { user_id: userId, status: { [Op.ne]: 'deleted' } },
                 // include: [{ model: User, as: 'user' }]
             });
             return goals;
@@ -39,7 +39,9 @@ class FinancialGoalService {
     async getFinancialGoalById(id, userId) {
         try {
             const goal = await FinancialGoal.findOne({
-                where: { id, user_id: userId },
+                where: {
+                    id, user_id: userId, status: { [Op.ne]: 'deleted' }
+                },
                 include: [{ model: User, as: 'user' }]
             });
             if (!goal) {
@@ -66,7 +68,7 @@ class FinancialGoalService {
 
             // Lưu lại lịch sử tiết kiệm của tháng hiện tại
             await logMonthlySaving(goal, data.amount_saved);
-          
+
 
             goal.current_amount = parseFloat(goal.current_amount) + data.amount_saved;
             goal.calculateMonthlySaving();
@@ -78,6 +80,7 @@ class FinancialGoalService {
 
     // Xóa một mục tiêu tài chính
     async deleteFinancialGoal(id, userId) {
+console.log(id, userId);
         try {
             const goal = await FinancialGoal.findOne({
                 where: { id, user_id: userId },
@@ -86,7 +89,8 @@ class FinancialGoalService {
             if (!goal) {
                 throw new Error('Financial goal not found');
             }
-            await goal.destroy();
+            goal.status = 'deleted';
+            await goal.save();
             return { message: 'Financial goal deleted successfully' };
         } catch (error) {
             throw new Error('Error deleting financial goal: ' + error.message);
@@ -176,9 +180,9 @@ class FinancialGoalService {
     // }
 
     // Ghi lại lịch sử tiết kiệm hàng tháng
-   
 
-    
+
+
 
 }
 const logMonthlySaving = async (goal, amountSaved) => {
