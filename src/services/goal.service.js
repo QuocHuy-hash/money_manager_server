@@ -2,7 +2,7 @@
 
 const { FinancialGoal, MonthlySaving, User } = require('../models');
 const { Op } = require('sequelize');
-
+const { BadRequestError, NotFoundError } = require('../core/error.response');
 class FinancialGoalService {
     // Tạo một mục tiêu tài chính mới cho người dùng
     async createFinancialGoal(data, userId) {
@@ -18,7 +18,7 @@ class FinancialGoalService {
 
             return goal;
         } catch (error) {
-            throw new Error('Error creating financial goal: ' + error.message);
+            throw new BadRequestError('Error creating financial goal: ' + error.message);
         }
     }
 
@@ -31,7 +31,7 @@ class FinancialGoalService {
             });
             return goals;
         } catch (error) {
-            throw new Error('Error fetching financial goals: ' + error.message);
+            throw new BadRequestError('Error fetching financial goals: ' + error.message);
         }
     }
 
@@ -45,22 +45,23 @@ class FinancialGoalService {
                 include: [{ model: User, as: 'user' }]
             });
             if (!goal) {
-                throw new Error('Financial goal not found');
+                throw new NotFoundError('Financial goal not found');
             }
             return goal;
         } catch (error) {
-            throw new Error('Error fetching financial goal: ' + error.message);
+            throw new BadRequestError('Error fetching financial goal: ' + error.message);
         }
     }
 
     // Cập nhật một mục tiêu tài chính và xử lý số tiền chưa tiết kiệm được
     async updateFinancialGoal(userId, data) {
         try {
+
             const goal = await FinancialGoal.findOne({
                 where: { id: data.id, user_id: userId }
             });
             if (!goal) {
-                throw new Error('Financial goal not found');
+                throw new NotFoundError('Financial goal not found');
             }
 
             // Xử lý số tiền chưa tiết kiệm được nếu cần
@@ -69,31 +70,34 @@ class FinancialGoalService {
             // Lưu lại lịch sử tiết kiệm của tháng hiện tại
             await logMonthlySaving(goal, data.amount_saved);
 
-
-            goal.current_amount = parseFloat(goal.current_amount) + data.amount_saved;
-            goal.calculateMonthlySaving();
+            console.log("goal:::", goal.current_amount);
+            console.log("data.amount_saved:::", data.amount_saved);
+            // Cập nhật số tiền hiện tại và tính toán lại số tiền cần tiết kiệm hàng tháng
+            goal.current_amount = parseFloat(goal.current_amount) + parseFloat(data.amount_saved);
+            goal.current_amount = parseFloat(goal.current_amount.toFixed(2)); // Giới hạn số chữ số thập phân
+            await goal.calculateMonthlySaving();
+            console.log("goal:::", goal);
             return await goal.save();
         } catch (error) {
-            throw new Error('Error updating financial goal: ' + error.message);
+            throw new BadRequestError('Error updating financial goal: ' + error.message);
         }
     }
 
     // Xóa một mục tiêu tài chính
     async deleteFinancialGoal(id, userId) {
-console.log(id, userId);
         try {
             const goal = await FinancialGoal.findOne({
                 where: { id, user_id: userId },
                 include: [{ model: User, as: 'user' }]
             });
             if (!goal) {
-                throw new Error('Financial goal not found');
+                throw new NotFoundError('Financial goal not found');
             }
             goal.status = 'deleted';
             await goal.save();
             return { message: 'Financial goal deleted successfully' };
         } catch (error) {
-            throw new Error('Error deleting financial goal: ' + error.message);
+            throw new BadRequestError('Error deleting financial goal: ' + error.message);
         }
     }
     // Lấy danh sách lịch sử tiết kiệm của một mục tiêu tài chính
@@ -105,22 +109,48 @@ console.log(id, userId);
             });
             return savings;
         } catch (error) {
-            throw new Error('Error fetching monthly savings: ' + error.message);
+            throw new BadRequestError('Error fetching monthly savings: ' + error.message);
         }
     }
-    // Tính phần trăm hoàn thành của một mục tiêu tài chính
-    // async calculateCompletionPercentage(goalId) {
-    //     try {
-    //         const goal = await FinancialGoal.findByPk(goalId);
-    //         if (!goal) {
-    //             throw new Error('Financial goal not found');
-    //         }
-    //         const percentage = (goal.current_amount / goal.target_amount) * 100;
-    //         return Math.min(percentage, 100); // Giới hạn ở 100%
-    //     } catch (error) {
-    //         throw new Error('Error calculating completion percentage: ' + error.message);
-    //     }
-    // }
+    // Hàm tạo báo cáo cho một mục tiêu tài chính
+    async generateGoalReport(goalId, userId) {
+        try {
+            if (!goalId) { throw new Error('Goal id is required'); }
+            // Lấy thông tin mục tiêu để đảm bảo nó tồn tại và thuộc về người dùng
+            const goal = await FinancialGoal.findOne({
+                where: { id: goalId, user_id: userId }
+            });
+            if (!goal) {
+                throw new NotFoundError('Financial goal not found');
+            }
+
+            // Lấy tất cả các giao dịch liên quan đến mục tiêu này
+            const transactions = await MonthlySaving.findAll({
+                where: { financial_goal_id: goalId },
+                order: [['month', 'ASC']] // Sắp xếp theo tháng từ cũ đến mới
+            });
+
+            // Tổng hợp dữ liệu theo thời gian
+            const reportData = transactions.map(transaction => ({
+                month: transaction.month, // tháng
+                amount_saved: parseFloat(transaction.amount_saved), // số tiền đã tiết kiệm
+                percentage_of_goal: parseFloat(transaction.percentage_of_goal) // phần trăm đạt được so với mục tiêu
+            }));
+
+            // Tổng số tiền đã tiết kiệm được
+            const totalSaved = reportData.reduce((sum, transaction) => sum + transaction.amount_saved, 0);
+
+            return  {
+                    goalName: goal.name,
+                    targetAmount: goal.target_amount,
+                    currentAmount: goal.current_amount,
+                    totalSaved,
+                    reportData };
+        } catch (error) {
+            console.error('Error generating goal report:', error);
+            throw new BadRequestError('Error generating goal report: ' + error.message);
+        }
+    }
 
     // // Kiểm tra và cập nhật trạng thái của một mục tiêu tài chính
     // async checkAndUpdateGoalStatus(goalId) {
