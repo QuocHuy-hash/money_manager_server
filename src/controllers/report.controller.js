@@ -19,6 +19,14 @@ class ReportController {
             metadata: await ReportService.generateExpenseSummaryReport(this.userId, startDate, endDate, type),
         }).send(res)
     }
+    GenerateSummaryReport = async (req, res, next) => {
+        this.setUserId(req);
+        const { startDate, endDate } = req.query;
+        new SuccessResponse({
+            message: 'GenerateSummaryReport successfully',
+            metadata: await ReportService.getSummaryReport(this.userId, startDate, endDate),
+        }).send(res)
+    }
     DailyExpenseReport = async (req, res, next) => {
         this.setUserId(req);
         const { startDate, endDate, type } = req.query;

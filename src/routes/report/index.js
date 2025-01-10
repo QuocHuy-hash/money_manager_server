@@ -9,6 +9,7 @@ const ReportController = require('../../controllers/report.controller');
 router.use(authentication) //require login
 
 router.get('/report/expense-summary', asyncHandle(ReportController.GenerateReport));
+router.get('/report/summary', asyncHandle(ReportController.GenerateSummaryReport));
 router.get('/report/expense-daily', asyncHandle(ReportController.DailyExpenseReport));
 router.get('/report/goal', asyncHandle(ReportController.DailyGoalReport));
 

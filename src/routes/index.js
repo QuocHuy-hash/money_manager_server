@@ -8,5 +8,6 @@ router.use('/api/', require('./transaction/index'));
 router.use('/api/', require('./fixedExpenses/index'));
 router.use('/api/', require('./goals/index'));
 router.use('/api/', require('./report/index'));
+router.use('/api/', require('./upload/index'));
 
 module.exports = router;

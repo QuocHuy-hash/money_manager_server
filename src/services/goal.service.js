@@ -70,8 +70,6 @@ class FinancialGoalService {
             // Lưu lại lịch sử tiết kiệm của tháng hiện tại
             await logMonthlySaving(goal, data.amount_saved);
 
-            console.log("goal:::", goal.current_amount);
-            console.log("data.amount_saved:::", data.amount_saved);
             // Cập nhật số tiền hiện tại và tính toán lại số tiền cần tiết kiệm hàng tháng
             goal.current_amount = parseFloat(goal.current_amount) + parseFloat(data.amount_saved);
             goal.current_amount = parseFloat(goal.current_amount.toFixed(2)); // Giới hạn số chữ số thập phân
@@ -112,6 +110,25 @@ class FinancialGoalService {
             throw new BadRequestError('Error fetching monthly savings: ' + error.message);
         }
     }
+    //lấy danh sách lịch sử tiết kiệm trong tháng
+    async getSummaryMonthlySavings(userId,month) {
+        try {
+            const goals = await FinancialGoal.findAll({
+                where: { user_id: userId, status: { [Op.ne]: 'deleted' } },
+                attributes: ['id', 'name']
+            });
+            const savings = await MonthlySaving.findAll({
+                where: {
+                    user_id: userId,
+                    month: month
+                },
+                order: [['month', 'ASC']]
+            });
+            return savings;
+        } catch (error) {
+            throw new BadRequestError('Error fetching monthly savings: ' + error.message);
+        }
+    }
     // Hàm tạo báo cáo cho một mục tiêu tài chính
     async generateGoalReport(goalId, userId) {
         try {
@@ -140,12 +157,13 @@ class FinancialGoalService {
             // Tổng số tiền đã tiết kiệm được
             const totalSaved = reportData.reduce((sum, transaction) => sum + transaction.amount_saved, 0);
 
-            return  {
-                    goalName: goal.name,
-                    targetAmount: goal.target_amount,
-                    currentAmount: goal.current_amount,
-                    totalSaved,
-                    reportData };
+            return {
+                goalName: goal.name,
+                targetAmount: goal.target_amount,
+                currentAmount: goal.current_amount,
+                totalSaved,
+                reportData
+            };
         } catch (error) {
             console.error('Error generating goal report:', error);
             throw new BadRequestError('Error generating goal report: ' + error.message);
