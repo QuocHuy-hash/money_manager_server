@@ -1,59 +1,63 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const crypto = require('crypto');
 const cloudinary = require('../config/cloudinary.config');
 const { Avatar } = require("../models");
-// Function to generate a random ID
-const generateRandomId = () => {
-    return crypto.randomBytes(8).toString('hex');
-};
 
-//upload images
+// Function to generate a random ID
+const generateRandomId = () => crypto.randomBytes(8).toString('hex');
+
+// Upload image from local path to Cloudinary
 const uploadFromLocal = async (path, userId) => {
     const randomId = generateRandomId();
-    const result = await cloudinary.uploader.upload(path, {
-        folder: `money_manager`,
-        public_id: `avartar-${randomId}`,
-        resource_type: 'image',
-    });
-    // Xóa file tạm sau khi upload lên Cloudinary
-    await uploadAvatar(result.secure_url, userId);
-    fs.unlinkSync(path);
-    return {
-        image_url: result.secure_url,
-        shopId: userId,
-        thumb_url: await cloudinary.url(result.public_id, {
-            height: 500,
-            width: 500,
-            crop: 'fill',
-            quality: 'auto',
-            format: 'jpg',
-        })
-    }
-}
-const showAvatar = async (userId) => {
-    const avatar = await Avatar.findOne({
-        where: { userId }
-    });
-    if (avatar) {
-        return avatar.url;
-    }
-}
-// delete image
-const deleteImage = async (body, userId) => {
-    const { publicId } = body;
-    const result = await cloudinary.uploader.destroy(publicId, {
-        resource_type: 'image',
-    });
-    return result;
 
-}
-const uploadAvatar = async (url, userId) => {
-    const checkExist = await Avatar.findOne({
-        where: { userId }
-    });
-    if (checkExist) {
-        return await Avatar.update({ url }, { where: { userId } });
+    try {
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(path, {
+            folder: `money_manager`,
+            public_id: `avatar-${randomId}`,
+            resource_type: 'image',
+        });
+
+        // Find existing avatar and delete it
+        const existingAvatar = await Avatar.findOne({ where: { userId } });
+        if (existingAvatar?.public_id) {
+            await cloudinary.uploader.destroy(existingAvatar.public_id, { resource_type: 'image' });
+        }
+
+        // Save new avatar to database
+        const avatarData = { url: result.secure_url, public_id: result.public_id, userId };
+        if (existingAvatar) {
+            await Avatar.update(avatarData, { where: { userId } });
+        } else {
+            await Avatar.create(avatarData);
+        }
+
+        // Delete temporary file
+        await fs.unlink(path);
+
+        return {
+            image_url: result.secure_url,
+            shopId: userId,
+            publicID: result.public_id,
+        };
+    } catch (error) {
+        // Cleanup file if upload fails
+        await fs.unlink(path).catch(() => null);
+        throw error;
     }
-    return await Avatar.create({ url, userId });
-}
+};
+
+// Show user's avatar URL
+const showAvatar = async (userId) => {
+    const avatar = await Avatar.findOne({ where: { userId } });
+    return avatar?.url || null;
+};
+
+// Delete user's avatar
+const deleteImage = async (userId) => {
+    const avatar = await Avatar.findOne({ where: { userId }, attributes: ['public_id'] });
+    if (!avatar?.public_id) return null;
+    return await cloudinary.uploader.destroy(avatar.public_id, { resource_type: 'image' });
+};
+
 module.exports = { uploadFromLocal, deleteImage, showAvatar };
