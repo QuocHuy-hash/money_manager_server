@@ -6,6 +6,7 @@ var logger = require('morgan');
 const compression = require('compression');
 const cors = require('cors');
 require('dotenv').config();
+const swaggerDocs = require('../swagger');
 var app = express();
 
 // view engine setup
@@ -22,6 +23,10 @@ var corsOptions = {
     optionsSuccessStatus: 200
 }
 app.use(cors(corsOptions));
+
+// Swagger documentation
+app.use('/api-docs', swaggerDocs.serve, swaggerDocs.setup);
+
 //router
 // app.use('/', require('./routes/index'));
 app.get('/', function (req, res) {
