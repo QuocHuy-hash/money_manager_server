@@ -210,7 +210,7 @@
 
 /**
  * @swagger
- * /api/transaction/get-categorys:
+ * /api/transaction/get-categories:
  *   get:
  *     summary: Get transaction categories
  *     tags: [Transaction]
@@ -297,9 +297,9 @@ router.post('/transaction/add', asyncHandle(TransactionController.addTransaction
 router.post('/transaction/update', asyncHandle(TransactionController.updateTransaction));
 router.get('/transaction/get-detail', asyncHandle(TransactionController.getDetail));
 router.get('/transaction/get-list', asyncHandle(TransactionController.getList));
-router.get('/transaction/get-categorys', asyncHandle(TransactionController.getCategorys));
+router.get('/transaction/get-categories', asyncHandle(TransactionController.getCategorys));
 router.get('/transaction/get-list-summary', asyncHandle(TransactionController.getListSummary));
-router.get('/transaction/get-by-category', asyncHandle(TransactionController.getTransactionsByCategory)); 
+router.get('/transaction/get-by-category', asyncHandle(TransactionController.getTransactionsByCategory));
 
 
 module.exports = router; 

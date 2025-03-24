@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'Users', // Liên kết với bảng Users
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -21,53 +21,58 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false // Tên mục tiêu tài chính, không được để trống
       },
       target_amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(10, 2), // Số tiền mục tiêu, 10 chữ số, 2 chữ số thập phân
         allowNull: false
       },
       current_amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(10, 2), // Số tiền hiện tại, mặc định là 0
         allowNull: false,
         defaultValue: 0
       },
       deadline: {
-        type: Sequelize.DATE,
+        type: Sequelize.DATE, // Thời hạn hoàn thành mục tiêu
         allowNull: false
       },
       monthly_saving_amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(10, 2), // Số tiền cần tiết kiệm mỗi tháng, mặc định là 0
         allowNull: false,
         defaultValue: 0
       },
       missed_saving_amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(10, 2), // Số tiền chưa tiết kiệm được từ các tháng trước, mặc định là 0
+        allowNull: false,
+        defaultValue: 0
+      },
+      total_percentage_completed: {
+        type: Sequelize.DECIMAL(5, 2), // Tổng phần trăm đã hoàn thành, 5 chữ số, 2 chữ số thập phân, mặc định là 0
         allowNull: false,
         defaultValue: 0
       },
       updated_saving_date: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE // Thời gian gần nhất cập nhật tiền tiết kiệm
       },
       reminder_day: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER // Ngày nhắc nhở trong tháng
       },
       status: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING, // Trạng thái của mục tiêu (active, completed, deleted)
         defaultValue: 'active'
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE // Thời gian tạo bản ghi
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE // Thời gian cập nhật bản ghi
       }
     });
-
   },
+
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('FinancialGoals');
+    await queryInterface.dropTable('FinancialGoals'); // Xóa bảng nếu cần rollback
   }
 };

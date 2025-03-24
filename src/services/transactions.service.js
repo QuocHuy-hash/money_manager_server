@@ -85,94 +85,58 @@ class TransactionService {
         try {
             const whereClause = {
                 user_id: userId,
-                transaction_date: {
-                    [Op.gte]: start,
-                    [Op.lte]: end
-                }
+                transaction_date: { [Op.gte]: start, [Op.lte]: end }
             };
 
-            // Lấy tất cả transactions, bao gồm category liên quan
             const transactions = await Transaction.findAll({
                 where: whereClause,
-                include: [{
-                    model: Category,
-                    as: 'category',
-                    attributes: ['id', 'name'] // Chỉ lấy ID và tên của category
-                }],
-                order: [['transaction_date', 'DESC']] // Sắp xếp theo ngày giao dịch, mới nhất trước
-
+                include: [{ model: Category, as: 'category', attributes: ['id', 'name'] }],
+                order: [['transaction_date', 'DESC']]
             });
 
-            // Nhóm theo category và tính tổng số tiền
             const categoryTotals = {};
-            let totalAmount = 0;
-            let salaryTotal = 0; // Tổng tiền của lương 
-            let bonusTotal = 0; // Tổng tiền của thưởng 
-            let category_id = 0;
+            let totalAmount = 0, salaryTotal = 0, bonusTotal = 0, expenseTotal = 0;
+
             transactions.forEach(transaction => {
                 const categoryId = transaction.category.id;
-                category_id = categoryId;
                 const categoryName = transaction.category.name;
                 const amount = parseFloat(transaction.amount);
-                const transactionDate = new Date(transaction.transaction_date);
-                // Tính tổng cho từng category
+
                 if (!categoryTotals[categoryId]) {
                     categoryTotals[categoryId] = {
                         categoryName,
                         categoryId,
                         totalAmount: 0,
-                        representativeDate: transactionDate, // Khởi tạo với ngày giao dịch đầu tiên (gần đây nhất)
-                        largestTransaction: {
-                            amount: amount,
-                            date: transactionDate
-                        }
+                        representativeDate: new Date(transaction.transaction_date)
                     };
-                } else {
-                    if (amount > categoryTotals[categoryId].largestTransaction.amount) {
-                        categoryTotals[categoryId].largestTransaction = {
-                           
-                            amount: amount,
-                            date: transactionDate
-                        };
-                    }
                 }
                 categoryTotals[categoryId].totalAmount += amount;
 
-                // Tính tổng số tiền lương và thưởng 
-                if (categoryId === 8) {
-                    salaryTotal += amount;
-                }
-                if (categoryId === 11) {
-                    bonusTotal += amount;
-                }
+                // Phân loại thu nhập và chi tiêu
+                if (categoryId === 8) salaryTotal += amount; // Lương
+                else if (categoryId === 11) bonusTotal += amount; // Thưởng
+                else expenseTotal += amount; // Chi tiêu (các category khác)
 
-                // Tổng tất cả các giao dịch
                 totalAmount += amount;
-               
             });
-            // Tính phần trăm cho từng category
+
             Object.keys(categoryTotals).forEach(categoryId => {
                 const category = categoryTotals[categoryId];
-                category.percentage = ((category.totalAmount / totalAmount) * 100).toFixed(2);
-                category.representativeDate = category.largestTransaction.date;
-                delete category.largestTransaction; // Xóa thông tin tạm thời
+                category.percentage = totalAmount > 0 ? ((category.totalAmount / totalAmount) * 100).toFixed(2) : '0.00';
             });
-            // Tính phần trăm tăng hoặc giảm so với lương (category 8) và thưởng (category 11)
-            const salaryPercentage = (salaryTotal / totalAmount) * 100;
-            const bonusPercentage = (bonusTotal / totalAmount) * 100;
 
             return {
                 totalAmount,
                 categoryTotals,
-                
                 salaryTotal,
                 bonusTotal,
-                salaryPercentage: salaryPercentage.toFixed(2), // Làm tròn 2 chữ số sau dấu thập phân
-                bonusPercentage: bonusPercentage.toFixed(2)
+                expenseTotal, // Thêm expenseTotal để frontend dễ tính toán số dư
+                salaryPercentage: totalAmount > 0 ? (salaryTotal / totalAmount * 100).toFixed(2) : '0.00',
+                bonusPercentage: totalAmount > 0 ? (bonusTotal / totalAmount * 100).toFixed(2) : '0.00'
             };
         } catch (error) {
             console.error('Error getting transaction summary:', error);
-            throw new BadRequestError('Error getting transaction summary');
+            throw new BadRequestError(`Error getting transaction summary: ${error.message}`);
         }
     }
     static async getTransactionsByCategory(userId, categoryId, startDate = null, endDate = null) {

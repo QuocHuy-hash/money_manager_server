@@ -1,7 +1,7 @@
 'use strict'
 
 const { CreatedResponse, SuccessResponse } = require("../core/success.response");
-const { createFinancialGoal, getUserFinancialGoals, getFinancialGoalById, updateFinancialGoal, getMonthlySavings, deleteFinancialGoal } = require("../services/goal.service");
+const { createFinancialGoal, getUserFinancialGoals, getFinancialGoalById, updateFinancialGoal, getMonthlySavings, deleteFinancialGoal, getMonthlySavingsTotalForUser } = require("../services/goal.service");
 
 const HEADER = {
     CLIENT_ID: 'x-client-id',
@@ -22,8 +22,8 @@ class GoalsController {
     }
     delGoal = async (req, res, next) => {
         this.setUserId(req);
-       const id  = req.query.id;
-console.log('id', id)
+        const id = req.query.id;
+        console.log('id', id)
         new CreatedResponse({
             message: 'delete Success',
             metadata: await deleteFinancialGoal(id, this.userId),
@@ -42,7 +42,7 @@ console.log('id', id)
         this.setUserId(req);
         new SuccessResponse({
             message: 'getDetail FinancialGoals successfully',
-            metadata: await getUserFinancialGoals( this.userId),
+            metadata: await getUserFinancialGoals(this.userId),
         }).send(res)
     }
     getFinancialGoalById = async (req, res, next) => {
@@ -58,10 +58,17 @@ console.log('id', id)
         this.setUserId(req);
         new SuccessResponse({
             message: 'getMonthlySavings successfully',
-            metadata: await getMonthlySavings(goalId ),
+            metadata: await getMonthlySavings(goalId),
         }).send(res)
     }
-
-} 
+    getTotalSavingsByMonth = async (req, res, next) => {
+        this.setUserId(req);
+        const month = req.query.month;
+        new SuccessResponse({
+            message: 'getTotalSavingsByMonth successfully',
+            metadata: await getMonthlySavingsTotalForUser(this.userId, month),
+        }).send(res);
+    }
+}
 
 module.exports = new GoalsController();

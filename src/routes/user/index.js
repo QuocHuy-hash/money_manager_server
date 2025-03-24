@@ -18,7 +18,7 @@
  *         id:
  *           type: string
  *           description: The auto-generated id of the user
- *         email:
+ *         user_name:
  *           type: string
  *           description: User email
  *         fullName:
@@ -77,7 +77,7 @@
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - user_name
  *               - password
  *             properties:
  *               email:

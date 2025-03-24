@@ -251,6 +251,7 @@ router.post('/goal/update', asyncHandle(GoalsController.updateGoal));
 router.get('/goal/get-by-user', asyncHandle(GoalsController.getDetail));
 router.get('/goal/get-by-id', asyncHandle(GoalsController.getFinancialGoalById));
 router.get('/goal/get-monthly-saving', asyncHandle(GoalsController.getMonthlySavings));
-router.post('/goal/delete', asyncHandle(GoalsController.delGoal)); 
+router.get('/goal/get-total-by-month', asyncHandle(GoalsController.getTotalSavingsByMonth));
+router.post('/goal/delete', asyncHandle(GoalsController.delGoal));
 
 module.exports = router; 

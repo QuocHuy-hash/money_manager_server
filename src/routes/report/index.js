@@ -165,6 +165,34 @@
  *         description: Unauthorized
  */
 
+/**
+ * @swagger
+ * /api/report/get-report-by-year:
+ *   get:
+ *     summary: Generate yearly financial report
+ *     tags: [Report]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Year for the report (YYYY)
+ *     responses:
+ *       200:
+ *         description: Yearly financial report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 const express = require('express');
 const router = express.Router();
 
@@ -178,6 +206,7 @@ router.get('/report/expense-summary', asyncHandle(ReportController.GenerateRepor
 router.get('/report/summary', asyncHandle(ReportController.GenerateSummaryReport));
 router.get('/report/expense-daily', asyncHandle(ReportController.DailyExpenseReport));
 router.get('/report/goal', asyncHandle(ReportController.DailyGoalReport));
+router.get('/report/get-report-by-year', asyncHandle(ReportController.generateYearlyFinancialReport));
 
 
 

@@ -18,7 +18,7 @@ app.use(logger('dev'));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 var corsOptions = {
-    origin: ['http://127.0.0.1:3055'],
+    origin: ['http://127.0.0.1:3055', 'http://127.0.0.1:3055/api-docs/'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     optionsSuccessStatus: 200
 }

@@ -1,5 +1,5 @@
 'use strict';
-const { Model, BIGINT } = require('sequelize');
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class FinancialGoal extends Model {
@@ -13,8 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     /**
-     * Tính toán số tiền cần tiết kiệm hàng tháng.
-     * Tính toán này sẽ tính cả số tiền chưa tiết kiệm được từ các tháng trước (nếu có).
+     * Tính toán số tiền cần tiết kiệm hàng tháng và tổng phần trăm đã hoàn thành.
      */
     calculateMonthlySaving() {
       if (typeof this.deadline === 'string') {
@@ -33,12 +32,16 @@ module.exports = (sequelize, DataTypes) => {
 
       // Tính số tiền cần tiết kiệm hàng tháng và giới hạn số chữ số thập phân
       this.monthly_saving_amount = remainingAmount > 0 ? (remainingAmount / monthsLeft).toFixed(2) : 0;
-      // Chuyển đổi lại về kiểu số để đảm bảo tính toán chính xác
       this.monthly_saving_amount = parseFloat(this.monthly_saving_amount);
+
+      // Tính tổng phần trăm đã hoàn thành dựa trên số tiền hiện tại so với mục tiêu
+      this.total_percentage_completed = (currentAmount / targetAmount) * 100;
+      this.total_percentage_completed = parseFloat(this.total_percentage_completed.toFixed(2));
     }
 
     /**
-     * Kiểm tra nếu người dùng không tiết kiệm tháng này, cộng dồn số tiền vào tháng sau.
+     * Kiểm tra nếu người dùng không tiết kiệm tháng này, cộng dồn số tiền vào tháng sau (nếu cần).
+     * (Tạm thời giữ lại nhưng có thể bỏ nếu không cần thiết theo yêu cầu mới.)
      */
     handleMissedSaving() {
       const today = new Date();
@@ -47,48 +50,51 @@ module.exports = (sequelize, DataTypes) => {
       if (this.updated_saving_date) {
         const lastUpdateMonth = new Date(this.updated_saving_date).getMonth();
         const currentMonth = today.getMonth();
-        // Nếu chưa tiết kiệm trong tháng này
         if (currentMonth !== lastUpdateMonth) {
-          // Cộng dồn số tiền tiết kiệm bị bỏ lỡ và giới hạn số chữ số thập phân
-          this.missed_saving_amount = this.missed_saving_amount  + missedAmount;
+          this.missed_saving_amount = (parseFloat(this.missed_saving_amount) || 0) + missedAmount;
         }
       } else {
-        // Nếu chưa bao giờ tiết kiệm
-        this.missed_saving_amount = this.missed_saving_amount + missedAmount;
+        this.missed_saving_amount = (parseFloat(this.missed_saving_amount) || 0) + missedAmount;
       }
 
-      // Chuyển đổi lại về kiểu số để đảm bảo tính toán chính xác
-      this.missed_saving_amount = parseFloat(this.missed_saving_amount);
-      this.missed_saving_amount = this.missed_saving_amount.toFixed(2);
-      // Cập nhật lại thời gian tiết kiệm
+      this.missed_saving_amount = parseFloat(this.missed_saving_amount.toFixed(2));
       this.updated_saving_date = today;
     }
-}
+  }
 
   FinancialGoal.init({
-    user_id: DataTypes.INTEGER,
-    name: DataTypes.STRING,
-    target_amount: DataTypes.DECIMAL,
-    current_amount: DataTypes.DECIMAL,
-    deadline: DataTypes.DATE,
-    monthly_saving_amount: DataTypes.DECIMAL, // Số tiền cần tiết kiệm mỗi tháng
+    user_id: DataTypes.INTEGER, // ID của người dùng sở hữu mục tiêu
+    name: DataTypes.STRING, // Tên của mục tiêu tài chính
+    target_amount: DataTypes.DECIMAL, // Số tiền mục tiêu cần đạt
+    current_amount: {
+      type: DataTypes.DECIMAL, // Số tiền hiện tại đã tiết kiệm được
+      defaultValue: 0
+    },
+    deadline: DataTypes.DATE, // Thời hạn hoàn thành mục tiêu
+    monthly_saving_amount: {
+      type: DataTypes.DECIMAL, // Số tiền cần tiết kiệm mỗi tháng
+      defaultValue: 0
+    },
     missed_saving_amount: {
-      type: DataTypes.DECIMAL, // Số tiền chưa tiết kiệm được từ các tháng trước
+      type: DataTypes.DECIMAL, // Số tiền chưa tiết kiệm được từ các tháng trước (có thể bỏ nếu không cần)
+      defaultValue: 0
+    },
+    total_percentage_completed: {
+      type: DataTypes.DECIMAL, // Tổng phần trăm đã hoàn thành so với mục tiêu
       defaultValue: 0
     },
     updated_saving_date: DataTypes.DATE, // Thời gian gần nhất cập nhật tiền tiết kiệm
     reminder_day: DataTypes.INTEGER, // Ngày nhắc nhở trong tháng
     status: {
-      type: DataTypes.STRING,
-      defaultValue: 'active' // Trạng thái của mục tiêu
+      type: DataTypes.STRING, // Trạng thái của mục tiêu (active, completed, deleted)
+      defaultValue: 'active'
     }
   }, {
     sequelize,
     modelName: 'FinancialGoal',
     hooks: {
       beforeSave: (goal) => {
-      
-        goal.calculateMonthlySaving(); 
+        goal.calculateMonthlySaving(); // Tự động tính toán trước khi lưu
       }
     }
   });
