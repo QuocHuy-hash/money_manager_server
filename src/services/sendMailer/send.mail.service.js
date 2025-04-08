@@ -60,13 +60,8 @@ const verifyOtp = async (body) => {
         });
     } else {
         await redisClient.disconnect();
-        return ({
-            success: false,
-            message: 'OTP did not match',
-        });
+        throw new BadRequestError('OTP did not match');
     }
-
-
 };
 const reSendMail = async (body) => {
     const { email } = body;

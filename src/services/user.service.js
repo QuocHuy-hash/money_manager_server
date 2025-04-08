@@ -55,8 +55,9 @@ const login = async ({ userName, password, refreshToken = null }) => {
         tokens
     }
 }
-const AccessService = async (user) => {
-    const { email, password, firstName, lastName, phoneNumber, userName } = user;
+const AccessService = async (body) => {
+
+    const { email, password, firstName, lastName, userName } = body;
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -68,10 +69,9 @@ const AccessService = async (user) => {
         throw new BadRequestError('Error : User already register');
     }
     const newUser = await User.create({
-        email, password: passwordHash, firstName, lastName, phone_number: phoneNumber, user_name: userName
+        email, password: passwordHash, firstName, lastName, user_name: userName
     });
     if (newUser) {
-
         const privateKey = crypto.randomBytes(64).toString('hex');
         const publicKey = crypto.randomBytes(64).toString('hex');
 
