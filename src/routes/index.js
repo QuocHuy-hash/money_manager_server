@@ -9,5 +9,7 @@ router.use('/api/', require('./fixedExpenses/index'));
 router.use('/api/', require('./goals/index'));
 router.use('/api/', require('./report/index'));
 router.use('/api/', require('./upload/index'));
+router.use('/api/', require('./spendingLimit/index'));
+router.use('/api/', require('./groupMembers/index'));
 
 module.exports = router;

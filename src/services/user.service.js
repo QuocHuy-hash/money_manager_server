@@ -86,7 +86,7 @@ const AccessService = async (body) => {
         }
         const tokens = await createTokenPair({ userId: newUser.id, email }, publicKey, privateKey);
         const subject = 'Verify Your Account'
-        sendMail({ to: email, subject, text: email })
+        sendMail({ to: email, subject })
         return {
             code: '201',
             metadata: {

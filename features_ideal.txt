@@ -1,0 +1,4 @@
+1. Tạo báo cáo cho người dùng xuất báo cáo excel hoặc pdf => free
+3. Lập kế hoạch chi tiêu hàng tháng: Cho phép người dùng dự trù các khoản chi cụ thể từng tháng (ví dụ: tiền ăn 3 triệu, tiền nhà 2 triệu...) => free
+2. Hạn mức chi tiêu trong tháng =>Cho phép người dùng thiết lập hạn mức cho từng danh mục. ===>premium
+2. Chia sẻ tài khoản hoặc chế độ gia đình: tạo nhóm để các thành viên trong gia đình có thể theo dõi => premium

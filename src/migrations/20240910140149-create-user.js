@@ -44,6 +44,12 @@ module.exports = {
       verify: {
         type: Sequelize.BOOLEAN,
       },
+     is_premium: {
+          type: Sequelize.BOOLEAN,
+      },
+      subscription_expires: {
+          type: Sequelize.DATE,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

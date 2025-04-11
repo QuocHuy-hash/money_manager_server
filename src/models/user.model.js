@@ -11,6 +11,13 @@ module.exports = (sequelize, DataTypes) => {
             User.hasMany(models.Report, { foreignKey: 'user_id' });
             User.hasMany(models.FixedExpense, { foreignKey: 'user_id' });
             User.hasMany(models.Transaction, { foreignKey: 'user_id' });
+            // thêm ngày 11-04-2025 cho chức năng giới hạn chi tiêu 
+            User.hasMany(models.SpendingLimit, { foreignKey: 'user_id' });
+           User.belongsToMany(models.Group, { 
+                through: 'UserGroups', 
+                foreignKey: 'user_id',
+                as: 'userGroups'
+            });
         }
     }
     User.init({
@@ -51,6 +58,14 @@ module.exports = (sequelize, DataTypes) => {
                 isIn: [['inactive', 'active']], // Giới hạn giá trị chỉ được là 'inactive' hoặc 'active'
             },
         },
+        is_premium: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        subscription_expires: {
+            type: DataTypes.DATE,
+            allowNull: true
+        }
        
     }, {
         sequelize,
