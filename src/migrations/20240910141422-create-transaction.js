@@ -39,6 +39,9 @@ module.exports = {
       description: {
         type: Sequelize.TEXT
       },
+      group_id: {
+        type: Sequelize.INTEGER
+      },
       transaction_date: {
         type: Sequelize.DATE
       },

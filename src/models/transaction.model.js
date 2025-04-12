@@ -18,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'userId',
         as: 'user',
       });
+      // Thêm quan hệ với GroupFamily
+      Transaction.belongsTo(models.Group, {
+        foreignKey: 'group_id',
+        as: 'group_transactions',
+      });
     }
   }
   Transaction.init({
@@ -31,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     transaction_type: DataTypes.STRING,
     category_id: DataTypes.INTEGER,
     description: DataTypes.TEXT,
+    group_id: DataTypes.INTEGER,
     transaction_date: DataTypes.DATE
   }, {
     sequelize,

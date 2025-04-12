@@ -8,6 +8,11 @@ const cors = require('cors');
 require('dotenv').config();
 const swaggerDocs = require('../swagger');
 var app = express();
+//import check Queue
+const { createBullBoard } = require('@bull-board/api');
+const { ExpressAdapter } = require('@bull-board/express');
+const { BullAdapter } = require('@bull-board/api/bullAdapter');
+const emailQueue = require('./workers/email.worker');
 
 // view engine setup
 app.use(express.json());
@@ -33,6 +38,17 @@ app.get('/', function (req, res) {
     res.send('Hello World');
 });
 app.use('/v1', require('./routes/index'));
+//theo dõi Queue
+const serverAdapter = new ExpressAdapter();
+const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
+    queues: [new BullAdapter(emailQueue)],
+    serverAdapter
+});
+
+// Đặt ở tiền tố bạn muốn
+serverAdapter.setBasePath('/admin/queues');
+app.use('/admin/queues', serverAdapter.getRouter());
+
 // catch 404 and forward to error handler
 app.use(function (error, req, res, next) {
     next(createError(404));

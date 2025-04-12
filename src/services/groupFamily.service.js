@@ -3,6 +3,7 @@ const { BadRequestError, NotFoundError, ForbiddenError } = require('../core/erro
 const { Group, GroupMember, User, Transaction, Category, FixedExpense, sequelize } = require('../models');
 const { sendMail, sendEmail } = require('./sendMailer/send.mail.service');
 const emailQueue = require('../workers/email.worker');
+const { checkMemberFamily } = require('../models/repositoris/groupFamily.repo');
 /**
  * Chức năng quản lý giao dịch nhóm:
 
@@ -148,13 +149,7 @@ class GroupService {
     static async getGroupById(userId, groupId) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -253,7 +248,6 @@ class GroupService {
                     group_id: groupId
                 }
             });
-            
             if (existingMembership) {
                 if (existingMembership.invitation_status === 'accepted') {
                     throw new BadRequestError('User is already a member of this group');
@@ -266,15 +260,9 @@ class GroupService {
                     });
                     
                     // Send invitation email
-                    // await this._sendInvitationEmail(invitee.email, group.name, userId);
+                    await this._sendInvitationEmail(group, invitee);
 
-                    // await emailQueue.add({
-                    //     to: invitee.email,
-                    //    subject: group.name,
-                    //     html: `<p>You have been invited to join the group "${group.name}" by ${userId}.</p>
-                    //            <p>Please click the link below to accept the invitation:</p>
-                    //            <a href="http://example.com/accept-invitation/${existingMembership.id}">Accept Invitation</a>`
-                    // });
+                
                     return { message: 'Invitation sent successfully' };
                 }
             }
@@ -296,14 +284,7 @@ class GroupService {
             });
             
             // Send invitation email
-            // await this._sendInvitationEmail(invitee.email, group.name, userId);
-            // await emailQueue.add({
-            //             to: invitee.email,
-            //            subject: group.name,
-            //             html: `<p>You have been invited to join the group "${group.name}" by ${userId}.</p>
-            //                    <p>Please click the link below to accept the invitation:</p>
-            //                    <a href="http://example.com/accept-invitation/${existingMembership.id}">Accept Invitation</a>`
-            //         });
+           await this._sendInvitationEmail(group, invitee);
             return { message: 'Invitation sent successfully' };
         } catch (error) {
             throw new BadRequestError(`Error inviting user: ${error.message}`);
@@ -405,20 +386,25 @@ class GroupService {
         }
     }
     // Send invitation email
-static async _sendInvitationEmail(email, groupName, userId) {
-    try {
-        const user = await User.findByPk(userId);
-        if (!user) {
-            throw new NotFoundError('Không tìm thấy người dùng');
+static async _sendInvitationEmail(group, invitee) {
+   const job = await emailQueue.add(
+        'group-invitation', // tên job
+        {
+            to: invitee.email,
+            groupName: group.name,
+            invitee
+        },
+        {
+            attempts: 3, // thử lại 3 lần nếu thất bại
+            backoff: 5000 // đợi 5 giây trước khi thử lại
         }
-
-        const subject = `Lời mời tham gia ${groupName}`;
-        const text = `Xin chào,\n\nBạn đã được mời tham gia nhóm "${groupName}" bởi ${user.firstName} ${user.lastName}.\n\nVui lòng nhấp vào liên kết dưới đây để chấp nhận lời mời:\n\n[Chấp nhận lời mời]\n\nCảm ơn bạn!`;
-
-        await sendEmail({ to: email, subject, text });
-    } catch (error) {
-        throw new BadRequestError(`Lỗi khi gửi email mời: ${error.message}`);
-    }
+    );
+    
+    // Ghi lại ID của công việc để theo dõi sau này
+    return { 
+        message: 'Invitation sent successfully', 
+        jobId: job.id // trả về ID công việc
+    };
 }
     // Get group members
     static async getGroupMembers(userId, groupId) {
@@ -450,14 +436,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async getGroupTransactions(userId, groupId) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
-            
+            const membership = await checkMemberFamily(userId,groupId );
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
             }
@@ -471,13 +450,15 @@ static async _sendInvitationEmail(email, groupName, userId) {
                 where: {
                     group_id: groupId
                 },
+                attributes: ['id', 'amount', 'title', 'description', 'transaction_date', 'createdAt'],
                 include: [{
                     model: User,
                     as: 'user',
                     attributes: ['id', 'firstName', 'lastName', 'email']
                 }, {
                     model: Category,
-                    as: 'category'
+                    as: 'category',
+                    attributes: ['id', 'name']
                 }],
                 order: [['createdAt', 'DESC']]
             });
@@ -492,13 +473,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async addGroupTransaction(userId, groupId, transactionData) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+             const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -526,13 +501,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async updateGroupTransaction(userId, groupId, transactionId, transactionData) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -552,7 +521,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
             
             // Check if user has permission to edit transactions
             if (!membership.permissions.edit_transactions && transaction.user_id !== userId) {
-                throw new ForbiddenError('You do not have permission to edit this transaction');
+                throw new BadRequestError('You do not have permission to edit this transaction');
             }
             
             // Update transaction
@@ -568,13 +537,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async deleteGroupTransaction(userId, groupId, transactionId) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -610,13 +573,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async getGroupFixedExpenses(userId, groupId) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -652,13 +609,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async addGroupFixedExpense(userId, groupId, fixedExpenseData) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -686,13 +637,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async updateGroupFixedExpense(userId, groupId, fixedExpenseId, fixedExpenseData) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -728,13 +673,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
     static async deleteGroupFixedExpense(userId, groupId, fixedExpenseId) {
         try {
             // Check if user is a member of this group
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('Group not found or you are not a member');
@@ -845,13 +784,7 @@ static async _sendInvitationEmail(email, groupName, userId) {
             }
             
             // Find the membership
-            const membership = await GroupMember.findOne({
-                where: {
-                    user_id: userId,
-                    group_id: groupId,
-                    invitation_status: 'accepted'
-                }
-            });
+            const membership = await checkMemberFamily(userId,groupId );
             
             if (!membership) {
                 throw new NotFoundError('You are not a member of this group');

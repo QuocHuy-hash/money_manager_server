@@ -125,20 +125,20 @@ class GroupController {
     // Add a transaction to group
     addGroupTransaction = async (req, res, next) => {
         this.setUserId(req);
-        const { groupId, ...transactionData } = req.body;
+        const { groupId, ...data } = req.body;
         new CreatedResponse({
             message: 'Add Group Transaction Success',
-            metadata: await GroupService.addGroupTransaction(this.userId, groupId, transactionData),
+            metadata: await GroupService.addGroupTransaction(this.userId, groupId, data.transactionData),
         }).send(res)
     }
     
     // Update a group transaction
     updateGroupTransaction = async (req, res, next) => {
         this.setUserId(req);
-        const { groupId, transactionId, ...transactionData } = req.body;
+        const { groupId, transactionId, ...data } = req.body;
         new SuccessResponse({
             message: 'Update Group Transaction Success',
-            metadata: await GroupService.updateGroupTransaction(this.userId, groupId, transactionId, transactionData),
+            metadata: await GroupService.updateGroupTransaction(this.userId, groupId, transactionId, data.transactionData),
         }).send(res)
     }
     
