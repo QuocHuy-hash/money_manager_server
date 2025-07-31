@@ -49,30 +49,43 @@ const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
 serverAdapter.setBasePath('/admin/queues');
 app.use('/admin/queues', serverAdapter.getRouter());
 
-// catch 404 and forward to error handler
-app.use(function (error, req, res, next) {
-    next(createError(404));
-    console.log(error.message)
-    const strError = JSON.stringify(error.message);
-    const body = JSON.stringify(req.body);
-    const errorMessage = `${req.method} ${req.path} - ${strError} - Body::${body}`;
-    console.error(errorMessage)
-});
 
-// init handle exceptions
-app.use((req, res, next) => {
-    const error = new Error('Not Found');
-    error.status = 404
-    next(error);
-})
-
+//catch error for dev
 app.use((error, req, res, next) => {
     const statusCode = error.status || 500;
+    const strError = JSON.stringify(error.message);
+    const body = JSON.stringify(req.body);
+    const errorMessage = `${req.method} ${req.path} - ${statusCode}- ${strError} - Body::${body}`;
+    console.error(errorMessage)
     return res.status(statusCode).json({
         status: 'error',
         code: statusCode,
         message: error.message || 'Internal Service Error'
     })
 })
+// catch 404 and forward to error handler
+// app.use(function (error, req, res, next) {
+//     next(createError(404));
+//     console.log(error.message)
+//     const strError = JSON.stringify(error.message);
+//     const body = JSON.stringify(req.body);
+//     const errorMessage = `${req.method} ${req.path} - ${strError} - Body::${body}`;
+//     console.error(errorMessage)
+// });
+// init handle exceptions
+// app.use((req, res, next) => {
+//     const error = new Error('Not Found');
+//     error.status = 404
+//     next(error);
+// })
+
+// app.use((error, req, res, next) => {
+//     const statusCode = error.status || 500;
+//     return res.status(statusCode).json({
+//         status: 'error',
+//         code: statusCode,
+//         message: error.message || 'Internal Service Error'
+//     })
+// })
 
 module.exports = app;

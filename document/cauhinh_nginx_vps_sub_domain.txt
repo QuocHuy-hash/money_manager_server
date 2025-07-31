@@ -24,9 +24,9 @@ server {
 đầu tiên comment các dòng cấu hình ssl và connect cổng 433 vào để cấu hình https cho nó trước đã
 
 Tạo symbolic link vào sites-enabled:
--- sudo ln -s /etc/nginx/sites-available/project2 /etc/nginx/sites-enabled/
+-- sudo ln -s /etc/nginx/sites-available/shopdev.lol /etc/nginx/sites-enabled/
 tạo ssl cho domain
--- sudo ln -s /etc/nginx/sites-available/api.shop-ecommerce.click /etc/nginx/sites-enabled/
+-- sudo ln -s /etc/nginx/sites-available/shopdev.lol /etc/nginx/sites-enabled/
 
 ++++ nếu chưa tải certbox 
 --- 

@@ -7,7 +7,7 @@ const { createTokenPair, verifyJWT } = require('../auth/authUtil');
 const { getInfoData } = require('../utils');
 const { BadRequestError, AuthFailureError } = require('../core/error.response');
 const { findByEmail, updateverifyUsers } = require('../models/repositoris/user.repo');
-const { sendMail } = require('./sendMailer/send.mail.service');
+const { sendOtpEmail } = require('./sendMailer/send.mail.service');
 
 /*
        1 - check username in dbs
@@ -86,7 +86,7 @@ const AccessService = async (body) => {
         }
         const tokens = await createTokenPair({ userId: newUser.id, email }, publicKey, privateKey);
         const subject = 'Verify Your Account'
-        sendMail({ to: email, subject })
+        sendOtpEmail({ to: email, subject })
         return {
             code: '201',
             metadata: {

@@ -42,7 +42,13 @@ class GroupController {
             metadata: await GroupService.getUserGroups(this.userId),
         }).send(res)
     }
-    
+     getGroupsSummaries = async (req, res, next) => {
+        this.setUserId(req);
+        new SuccessResponse({
+            message: 'Get Group Summaries Success',
+            metadata: await GroupService.getGroupSummaries(this.userId),
+        }).send(res)
+    }
     // Get a group by ID
     getGroupById = async (req, res, next) => {
         this.setUserId(req);

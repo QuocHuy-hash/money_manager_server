@@ -13,6 +13,7 @@ router.post('/group/create', asyncHandle(groupMemberController.createGroup));
 router.post('/group/update', asyncHandle(groupMemberController.updateGroup));
 router.get('/group/user-groups', asyncHandle(groupMemberController.getUserGroups));
 router.get('/group/get-by-id', asyncHandle(groupMemberController.getGroupById));
+router.get('/group/get-summaries', asyncHandle(groupMemberController.getGroupsSummaries));
 router.post('/group/delete', asyncHandle(groupMemberController.deleteGroup)); //chưa test
 
 // Group member management

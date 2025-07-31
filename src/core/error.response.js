@@ -43,7 +43,7 @@ class NotFoundError extends ErrorResponse {
     }
 }
 
-class ForbidenError extends ErrorResponse {
+class ForbiddenError extends ErrorResponse {
     constructor(message = ReasonPhrases.FORBIDDEN, statusCode = StatusCodes.FORBIDDEN) {
         super(message, statusCode);
     }
@@ -54,5 +54,5 @@ module.exports = {
     BadRequestError,
     AuthFailureError,
     NotFoundError,
-    ForbidenError
+    ForbiddenError
 }

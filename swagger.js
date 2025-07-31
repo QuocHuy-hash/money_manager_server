@@ -16,14 +16,27 @@ const options = {
       },
     ],
     components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                    description: 'JWT token for authentication',
+                },
+                ClientIdHeader: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'x-client-id',
+                    description: 'Unique identifier for the client/user'
+                },
+                Authorization: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'athorization',
+                    description: 'Token'
+                }
+            }
         },
-      },
-    },
     security: [
       {
         bearerAuth: [],
